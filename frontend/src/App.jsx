@@ -5,7 +5,7 @@ import SignUpPage from './pages/auth/SignUpPage'
 import LoginPage from './pages/auth/LoginPage'
 import SideBar from './components/common/Sidebar'
 import BottomBar from './components/common/Bottombar'
-import RightPanel from './components/common/RightPanel'
+import SuggestionSkeleton from './components/common/SuggestionPanel'
 import NotificationPage from './pages/notification/NotificationPage'
 import ExplorePage from './pages/explore/ExplorePage'
 import ProfilePage from './pages/profile/ProfilePage'
@@ -50,7 +50,7 @@ function App() {
 			<Route path='/profile/:username' element={authUser? <ProfilePage/> : <Navigate to='/login'/>} />
 			<Route path='*' element={<h1>Not Found</h1>} />
 		</Routes>
-		{authUser && <RightPanel/>}
+		{authUser && <SuggestionSkeleton/>}
 		<Toaster/>
 	</div>
   )

@@ -79,6 +79,30 @@ export const getSuggestions = async (req, res) => {
     }
 }
 
+export const searchUsers = async (req, res) => {
+    try {
+        const {username} = req.query;
+        if(!username){
+            return res.status(400).json({error : "User does not exist"});
+        }
+        const users = await User.aggregate([
+            { 
+                $match: { 
+                    $or: [
+                        { username: { $regex: username, $options: "i" } },
+                        { fullname: { $regex: username, $options: "i" } }
+                    ]
+                }
+            },
+            {$sample: {size: 10}}
+        ])
+        res.status(200).json(users);
+    } catch (error) {
+        console.log("error in searchUsers controller :", error.message);
+        res.status(500).json({error : "Internal Server Error" });
+    }
+}
+
 export const updateUserProfile = async (req, res) => {
 	const { fullname, email, username, currentPassword, newPassword, bio, link } = req.body;
 	let { profileImg, coverImg } = req.body;
