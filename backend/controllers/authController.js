@@ -59,7 +59,7 @@ export const login = async (req, res) => {
     user.password = undefined;
     generateTokenAndSetCookie(user._id, res);
     res.status(200).json({
-      _id: user.id_,
+      _id: user._id,
       username: user.username,
       email: user.email,
       fullname: user.fullname,

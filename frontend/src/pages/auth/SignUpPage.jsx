@@ -36,6 +36,7 @@ const SignUpPage = () => {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Something went wrong");
+        localStorage.setItem("user", JSON.stringify(data))
         console.log(data);
         return data;
       } catch (error) {
@@ -45,6 +46,7 @@ const SignUpPage = () => {
     onSuccess: () => {
       toast.success("Account created successfully");
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      window.location.reload();
     },
   });
 

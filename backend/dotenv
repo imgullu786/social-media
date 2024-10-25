@@ -1,0 +1,17 @@
+# MONGODB
+MONGO_URL = mongodb+srv://imgullu786:Gullu786mongo@cluster0.e8lcb.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+# MONGO_URL = mongodb://mongo-db:27017/snowzen
+
+# PORT
+PORT = 5000
+
+# JWT
+JWT_SECRET = CWKVmk96kDrGoFhfuBIjYYoS15NK2T5h
+JWT_LIFETIME = 15d
+JWT_COOKIE_EXPIRES = 1d
+NODE_ENV = development
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME = dubokvspt
+CLOUDINARY_API_KEY = 927214978852148
+CLOUDINARY_API_SECRET = 13h0_A2NNq6mz7yhgzLOhl4l34I

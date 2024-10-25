@@ -31,8 +31,8 @@ const LoginPage = () => {
           body: JSON.stringify({ username, password }),
         });
         const data = await response.json();
-        console.log(data);
         if (!response.ok) throw new Error(data.error || "Something went wrong");
+        localStorage.setItem("user", JSON.stringify(data))
         console.log(data);
         return data;
       } catch (error) {
@@ -43,6 +43,7 @@ const LoginPage = () => {
     onSuccess: () => {
       toast.success("Logged in successfully");
       queryClient.invalidateQueries({ queryKey: ["authUser"] });
+      window.location.reload();
     },
   });
 
@@ -66,10 +67,10 @@ const LoginPage = () => {
             <Logo className="w-24 lg:hidden fill-white" />
           </div>
           <h1 className="flex justify-center text-4xl font-extrabold text-white">{"Let's"} go.</h1>
-          <div class="flex items-center justify-center text-white">
-            <p class="text-sm font-semibold">
-              Made with <span class="text-red-500">❤️</span> by{" "}
-              <span class="text-blue-400">Gulam Gaush</span>
+          <div className="flex items-center justify-center text-white">
+            <p className="text-sm font-semibold">
+              Made with <span className="text-red-500">❤️</span> by{" "}
+              <span className="text-blue-400">Gulam Gaush</span>
             </p>
           </div>
           <label className="input input-bordered rounded flex items-center gap-2">

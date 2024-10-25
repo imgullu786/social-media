@@ -1,18 +1,21 @@
 import './App.css'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import HomePage from './pages/home/HomePage'
 import SignUpPage from './pages/auth/SignUpPage'
 import LoginPage from './pages/auth/LoginPage'
 import SideBar from './components/common/Sidebar'
 import BottomBar from './components/common/Bottombar'
-import SuggestionSkeleton from './components/common/SuggestionPanel'
+import SuggestionPanel from './components/common/SuggestionPanel'
 import NotificationPage from './pages/notification/NotificationPage'
 import ExplorePage from './pages/explore/ExplorePage'
 import ProfilePage from './pages/profile/ProfilePage'
 import { Toaster } from 'react-hot-toast'
 import {useQuery} from '@tanstack/react-query'
 import LoadingSpinner from './components/common/LoadingSpinner'
+import MessagePage from './pages/chat/MessagePage'
 function App() {
+	const location = useLocation();
+
 	const {data:authUser, isLoading} = useQuery({
 		queryKey: ['authUser'],
 		queryFn: async() => {
@@ -46,11 +49,12 @@ function App() {
 			<Route path='/signup' element={!authUser? <SignUpPage />: <Navigate to='/'/>} />
 			<Route path='/login' element={!authUser? <LoginPage />: <Navigate to='/'/> } />
 			<Route path='/notifications' element={authUser? <NotificationPage/> : <Navigate to='/login'/>} />
+			<Route path='/messages' element={authUser? <MessagePage/> : <Navigate to='/login'/>} />
 			<Route path='/explore' element={authUser? <ExplorePage/> : <Navigate to='/login'/>} />
 			<Route path='/profile/:username' element={authUser? <ProfilePage/> : <Navigate to='/login'/>} />
 			<Route path='*' element={<h1>Not Found</h1>} />
 		</Routes>
-		{authUser && <SuggestionSkeleton/>}
+		{authUser && location.pathname !== '/messages' && <SuggestionPanel/>}
 		<Toaster/>
 	</div>
   )

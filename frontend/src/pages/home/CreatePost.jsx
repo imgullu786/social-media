@@ -33,7 +33,7 @@ const CreatePost = () => {
 		},
 		onSuccess: ()=>{
 			toast.success("Post created Successfully")
-			queryClient.invalidateQueries({queryKey: ['posts']})
+			queryClient.invalidateQueries({queryKey: ['posts']})		
 		}
 	})
 

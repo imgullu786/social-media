@@ -3,12 +3,14 @@ import dotenv from 'dotenv';
 import cookieParser from 'cookie-parser';
 import { v2 as cloudinary } from 'cloudinary';
 import path from 'path';
+import {app, server} from './socket/socket.js'
 
 import connectDB from "./db/connectDB.js";
 import authRoutes from "./routes/authRoutes.js";
 import userRoutes from "./routes/userRoutes.js";
 import postRoutes from "./routes/postRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import messageRoutes from './routes/messageRoutes.js';
 
 dotenv.config(path.resolve('../.env'));
 
@@ -18,8 +20,6 @@ cloudinary.config({
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-
-const app = express();
 const PORT = process.env.PORT || 5000
 const __dirname = path.resolve();
 
@@ -35,6 +35,7 @@ app.use("/api/auth", authRoutes)
 app.use("/api/user", userRoutes)
 app.use("/api/post", postRoutes)
 app.use("/api/notification", notificationRoutes)
+app.use("/api/messages", messageRoutes )
 
 if(process.env.NODE_ENV === 'production'){
     app.use(express.static(path.join(__dirname, '../frontend/dist')))
@@ -43,7 +44,7 @@ if(process.env.NODE_ENV === 'production'){
     })
 }
 
-app.listen(PORT, ()=>{
+server.listen(PORT, ()=>{
     console.log(`Sever is runnning on port ${PORT}`)
     connectDB();
 })

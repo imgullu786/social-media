@@ -36,7 +36,7 @@ const BottomBar = () => {
   const { data: authUser } = useQuery({ queryKey: ["authUser"] });
 
   return (
-    <div className="fixed bottom-0 left-0 w-full border-t border-gray-700 bg-black md:hidden">
+    <div className="fixed bottom-0 left-0 w-full border-t border-gray-700 bg-black md:hidden z-50">
       <div className="flex justify-around items-center h-12 ">
         <Link
           to="/"
@@ -49,7 +49,8 @@ const BottomBar = () => {
           className="flex flex-col items-center justify-center text-white hover:bg-stone-900 p-2 rounded-full">
           <FaSearch className="w-4 h-4" />
         </Link>
-        <Link className="flex flex-col items-center justify-center text-white hover:bg-stone-900 p-2 rounded-full">
+        <Link to='/messages'
+          className="flex flex-col items-center justify-center text-white hover:bg-stone-900 p-2 rounded-full">
           <AiFillMessage className="w-5 h-5" />
         </Link>
         <Link

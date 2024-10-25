@@ -1,5 +1,4 @@
 import { FaRegComment } from "react-icons/fa";
-import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
 import { FaRegBookmark } from "react-icons/fa6";
 import { FaTrash } from "react-icons/fa";
@@ -148,14 +147,14 @@ const Post = ({ post }) => {
 
   return (
     <div className="flex gap-2 items-start p-4 border-b border-gray-700">
-      <div className="avatar -z-10">
         <Link
           to={`/profile/${postOwner.username}`}
           className="w-8 h-8 rounded-full overflow-hidden"
         >
-          <img src={postOwner.profileImg || "/avatar-placeholder.png"} />
+          <div className="avatar -z-10">
+            <img src={postOwner.profileImg || "/avatar-placeholder.png"} />
+          </div>
         </Link>
-      </div>
       <div className="flex flex-col flex-1">
         <div className="flex gap-2 items-center">
           <Link to={`/profile/${postOwner.username}`} className="font-bold">

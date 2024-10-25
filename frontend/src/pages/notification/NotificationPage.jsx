@@ -76,12 +76,14 @@ const NotificationPage = () => {
 						<div className='flex justify-between gap-2 p-4'>
                             <div className="flex flex-row items-center" >
                                 <Link to={`/profile/${notification.from.username}`}>
-                                    <div className='w-7 rounded-full overflow-hidden'>
-                                        <img src={notification.from.profileImg || "/avatar-placeholder.png"} />
-                                    </div>
-                                </Link>
+									<div className="flex items-center">
+										<div className='w-7 h-7 rounded-full overflow-hidden'>
+											<img src={notification.from.profileImg || "/avatar-placeholder.png"}/>
+										</div>
+										<span className='font-bold'>@{notification.from.username}</span>
+									</div>
+								</Link>
                                 <div>
-                                    <span className='font-bold'>@{notification.from.username}</span>{" "}
                                     {notification.type === "follow" ? "followed you" : "liked your post"}
                                 </div>
                             </div>

@@ -63,7 +63,8 @@ const Sidebar = () => {
 						</Link>
 					</li>
 					<li className='flex justify-center md:justify-start'>
-						<Link 
+						<Link
+							to ='/messages' 
 							className='flex gap-3 items-center hover:bg-stone-900 transition-all rounded-full duration-300 py-2 pl-2 pr-4 max-w-fit cursor-pointer'
 						>
 							<AiFillMessage className='w-6 h-6' />
