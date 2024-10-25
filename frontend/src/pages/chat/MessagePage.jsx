@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient, useQuery } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import ConversationSkeleton from '../../components/skeletons/ConversationSkeleton';
 
 import { IoSend } from "react-icons/io5";
 import { IoArrowBack } from "react-icons/io5";
 import {IoIosSearch} from "react-icons/io";
 import { FaCheck } from "react-icons/fa";
+import { FaRegImage } from "react-icons/fa";
+
 
 import { useRecoilState, useRecoilValue } from 'recoil';
 import userAtom from '../../atoms/userAtom';
 import { selectedConversationAtom } from '../../atoms/messageAtom';
 import { UseSocket } from '../../context/socket';
+import LoadingSpinner from '../../components/common/LoadingSpinner';
 
 const MessagesPage = () => {
   const currentUser = useRecoilValue(userAtom);
@@ -18,6 +21,7 @@ const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useRecoilState(selectedConversationAtom);
   const [allMessages, setAllMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
   const [search, setSearch] = useState("");
   const handleSearchChange = (e) => {
     setSearch(e.target.value);
@@ -63,23 +67,29 @@ const MessagesPage = () => {
     queryClient.refetchQueries('messages');
   }, [selectedConversation]);
 
-  const sendMessage = (text) => async () => {
-    if (!text) return;
+
+  const sendMessage = () => async () => {
+    if (!messageText && !img) return; 
+    setSendingMessage(true);
     try {
       const res = await fetch('/api/messages/', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           recipientId: selectedConversation.userId,
-          message: text,
+          message: messageText,
+          img: img,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Something went wrong');
       setMessageText('');
+      setImg(null);
       queryClient.invalidateQueries('conversations')
     } catch (error) {
       console.error('Fetch error:', error.message);
+    } finally {
+      setSendingMessage(false)
     }
   }
 
@@ -130,6 +140,21 @@ const MessagesPage = () => {
   useEffect(() => {
 	queryClient.invalidateQueries("searchedUsers");
   }, [search]);
+
+  // Input Image to send
+  const [img, setImg] = useState(null);
+	const imgRef = useRef(null);
+  const handleImgChange = (e) => {
+    document.getElementById('my_modal_3').showModal()
+		const file = e.target.files[0];
+		if (file) {
+			const reader = new FileReader();
+			reader.onload = () => {
+				setImg(reader.result);
+			};
+			reader.readAsDataURL(file);
+		}
+	};
 
   return (
     <div className="flex-[4_4_0] flex flex-col h-screen overflow-hidden border-r border-l border-gray-700 ">
@@ -271,9 +296,14 @@ const MessagesPage = () => {
                       key={index}
                       className={`flex ${message?.sender === currentUser._id ? 'justify-end' : 'justify-start'} mb-4`}
                     >
-                      <div className={`rounded-xl p-3 py-2 max-w-xs text-white ${message.sender === currentUser._id ? 'bg-blue-500' : 'bg-gray-700'}`}>
+                      {message.text!='' && (<div className={`rounded-xl p-3 py-2 max-w-xs text-white ${message.sender === currentUser._id ? 'bg-blue-500' : 'bg-gray-700'}`}>
                         {message.text}
-                      </div>
+                      </div>)}
+                      {message.img && (
+                        <div className="relative w-72">
+                          <img src={message.img} className={`w-72 mx-auto h-72 object-contain rounded`} />
+                        </div>
+                      )}
                     </div>
                   ))}
                   <div ref={messageEndRef} />
@@ -287,10 +317,46 @@ const MessagesPage = () => {
                     placeholder="Type a message..."
                     value={messageText} onChange={(e) => setMessageText(e.target.value)}
                   />
-                  <button className="ml-3 p-2 bg-blue-500 rounded-lg flex items-center justify-center"
-                  onClick={sendMessage(messageText)}
+                  <div className='flex gap-1 items-center'>
+                    <FaRegImage
+                      className='fill-primary w-6 h-6 cursor-pointer'
+                      onClick={() => {
+                        imgRef.current.click()
+                      }}
+                    />
+                  </div>
+                  <input type='file' hidden ref={imgRef} onChange={handleImgChange} />
+                  <dialog id="my_modal_3" className="modal">
+                    <div className="modal-box bg-gray-700">
+                      <form method="dialog">
+                        {/* if there is a button in form, it will close the modal */}
+                        <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+                          onClick={()=>{
+                            setImg(null);
+                            imgRef.current.value = null;
+                          }}
+                        >✕</button>
+                      </form>
+                      {img && (
+                        <div>
+                          <div className='relative w-72 mx-auto'>
+                            <img src={img} className='w-full mx-auto h-72 object-contain rounded' />
+                          </div>
+                          <button className="absolute bottom-2 -right-0 mx-2 p-2 bg-blue-500 rounded-lg flex items-center justify-center"
+                            onClick={sendMessage()}
+                          >
+                            {sendingMessage && <LoadingSpinner size="xs" />}
+                            {!sendingMessage && <IoSend className="text-white" />}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </dialog>
+                  <button className="mx-2 p-2 bg-blue-500 rounded-lg flex items-center justify-center"
+                    onClick={sendMessage()}
                   >
-                    <IoSend className="text-white" />
+                    {sendingMessage && <LoadingSpinner size="xs" />}
+                    {!sendingMessage && <IoSend className="text-white" />}
                   </button>
                 </div>
             </>

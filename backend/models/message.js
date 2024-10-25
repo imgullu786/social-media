@@ -9,7 +9,11 @@ const messageSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     },
-    text: String
+    text: String,
+    img: {
+        type: String,
+        default: "",
+    },
     },{timestamps: true}
 );
 
