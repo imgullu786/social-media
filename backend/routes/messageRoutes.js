@@ -8,5 +8,4 @@ router.post('/', protectRoute, sendMessage);
 router.get('/get/:recipientUserId', protectRoute, getMessages);
 router.get('/conversations', protectRoute, getConversations);
 
-
 export default router;

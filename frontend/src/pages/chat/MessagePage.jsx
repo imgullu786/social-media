@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import ConversationSkeleton from '../../components/skeletons/ConversationSkeleton';
 
 import { IoSend } from "react-icons/io5";
@@ -27,6 +27,33 @@ const MessagesPage = () => {
     setSearch(e.target.value);
   };
 
+  useEffect(() => {
+		socket.on("newMessage", (message) => {
+			if (selectedConversation._id === message.conversationId) {
+				setAllMessages((prev) => [...prev, message]);
+			}
+
+			setSelectedConversation((prev) => {
+				const updatedConversations = prev.map((conversation) => {
+					if (conversation._id === message.conversationId) {
+						return {
+							...conversation,
+							lastMessage: {
+								text: message.text,
+								sender: message.sender,
+							},
+						};
+					}
+					return conversation;
+				});
+				return updatedConversations;
+			});
+		});
+
+		return () => socket.off("newMessage");
+	}, [socket, selectedConversation, setSelectedConversation]);
+
+
   const { data: conversations, isLoading: isConversationLoading } = useQuery({
     queryKey: ['conversations'],
     queryFn: async () => {
@@ -42,6 +69,7 @@ const MessagesPage = () => {
     },
   });
 
+  
   const { data: messages } = useQuery({
     queryKey: ['messages'],
     queryFn: async () => {
@@ -93,17 +121,6 @@ const MessagesPage = () => {
     }
   }
 
-  useEffect(() => {
-    if (socket) {
-      socket.on('newMessage', (newMessage) => {
-        setAllMessages((prev) => [...prev, newMessage]);
-      });
-      
-    }
-    return () => {
-      socket?.off('newMessage');
-    };
-  }, [messages]);
 
   const messageEndRef = useRef(null);
   useEffect(() => {

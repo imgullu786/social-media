@@ -83,8 +83,11 @@ const getConversations = async (req, res) => {
             select: 'username fullname profileImg',
         }).sort({ 'createdAt': -1 });
 
+		// remove the current user from the participants array
         conversations.forEach((conversation) => {
-            conversation.members = conversation.members.filter((member) => member._id.toString() !== userId.toString());
+            conversation.members = conversation.members.filter(
+                (member) => member._id.toString() !== userId.toString()
+            );
         });
         return res.status(200).json(conversations);
         
