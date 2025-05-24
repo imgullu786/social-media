@@ -34,6 +34,7 @@ const sendMessage = async (req, res) => {
             img: img || '',
         });
 
+
         await newMessage.save();
         await conversation.updateOne({
             lastMessage: {
@@ -58,37 +59,16 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
     try {
         const { recipientUserId } = req.params;
-        const { page = 1 } = req.query;
-        const pageSize = 20;
         const userId = req.user._id;
 
         const conversation = await Conversation.findOne({
             members: { $all: [userId, recipientUserId] },
         });
+        if (!conversation) return res.status(200).json({error: 'No conversation found'});
 
-        if (!conversation) return res.status(200).json({
-            messages: [],
-            hasMore: false,
-            currentPage: 1,
-            totalPages: 0
-        });
+        const messages = await Message.find({ conversationId: conversation._id }).sort({ createdAt: 1 });
 
-        const totalMessages = await Message.countDocuments({ conversationId: conversation._id });
-        const totalPages = Math.ceil(totalMessages / pageSize);
-
-        const messages = await Message.find({ conversationId: conversation._id })
-            .sort({ createdAt: -1 })
-            .skip((page - 1) * pageSize)
-            .limit(pageSize)
-            .lean()
-            .sort({ createdAt: 1 });
-
-        return res.status(200).json({
-            messages,
-            hasMore: page < totalPages,
-            currentPage: parseInt(page),
-            totalPages
-        });
+        return res.status(200).json(messages);
     } catch (error) {
         console.error('Error in getMessages Controller : ', error);
         res.status(500).json({ error: error.message });
@@ -103,11 +83,8 @@ const getConversations = async (req, res) => {
             select: 'username fullname profileImg',
         }).sort({ 'createdAt': -1 });
 
-		// remove the current user from the participants array
         conversations.forEach((conversation) => {
-            conversation.members = conversation.members.filter(
-                (member) => member._id.toString() !== userId.toString()
-            );
+            conversation.members = conversation.members.filter((member) => member._id.toString() !== userId.toString());
         });
         return res.status(200).json(conversations);
         
