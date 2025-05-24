@@ -59,16 +59,31 @@ const sendMessage = async (req, res) => {
 const getMessages = async (req, res) => {
     try {
         const { recipientUserId } = req.params;
+        const { page = 1 } = req.query;
+        const pageSize = 20;
         const userId = req.user._id;
 
         const conversation = await Conversation.findOne({
             members: { $all: [userId, recipientUserId] },
         });
-        if (!conversation) return res.status(200).json({error: 'No conversation found'});
+        
+        if (!conversation) return res.status(200).json([]);
 
-        const messages = await Message.find({ conversationId: conversation._id }).sort({ createdAt: 1 });
+        const totalMessages = await Message.countDocuments({ conversationId: conversation._id });
+        const totalPages = Math.ceil(totalMessages / pageSize);
 
-        return res.status(200).json(messages);
+        const messages = await Message.find({ conversationId: conversation._id })
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * pageSize)
+            .limit(pageSize)
+            .sort({ createdAt: 1 });
+
+        return res.status(200).json({
+            messages,
+            hasMore: page < totalPages,
+            currentPage: page,
+            totalPages
+        });
     } catch (error) {
         console.error('Error in getMessages Controller : ', error);
         res.status(500).json({ error: error.message });

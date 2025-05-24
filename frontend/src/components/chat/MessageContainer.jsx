@@ -1,10 +1,10 @@
 import { useRecoilState } from 'recoil';
 import { selectedConversationAtom } from '../../atoms/messageAtom';
+import Message from "./Message";
+import MessageInput from "./MessageInput";
+import LoadingSpinner from '../common/LoadingSpinner';
 
-import Message from "../../components/chat/Message";
-import MessageInput from "../../components/chat/MessageInput"
-
-function MessageContainer({ allMessages, setAllMessages }) {
+function MessageContainer({ allMessages, setAllMessages, messagesContainerRef, handleScroll, isLoading }) {
     const [selectedConversation] = useRecoilState(selectedConversationAtom);
 
     return (
@@ -14,7 +14,12 @@ function MessageContainer({ allMessages, setAllMessages }) {
                     Select a conversation to start messaging
                 </div>
             ) : (
-                <div className="flex flex-col h-full overflow-y-auto">
+                <div className="flex flex-col h-full overflow-y-auto" ref={messagesContainerRef} onScroll={handleScroll}>
+                    {isLoading && (
+                        <div className="flex justify-center p-2">
+                            <LoadingSpinner size="sm" />
+                        </div>
+                    )}
                     <Message allMessages={allMessages} />
                     <MessageInput allMessages={allMessages} setAllMessages={setAllMessages}/>
                 </div>

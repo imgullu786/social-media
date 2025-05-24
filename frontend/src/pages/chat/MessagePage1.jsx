@@ -1,6 +1,6 @@
 import { useRecoilState} from 'recoil';
 import { selectedConversationAtom } from '../../atoms/messageAtom';
-import { useState , useEffect} from 'react';
+import { useState , useEffect, useRef} from 'react';
 import { UseSocket } from '../../context/socket';
 
 import Conversation from '../../components/chat/Conversation';
@@ -11,70 +11,105 @@ const MessagesPage = () => {
   const {socket} = UseSocket();
   const [allMessages, setAllMessages] = useState([]);
   const [selectedConversation, setSelectedConversation] = useRecoilState(selectedConversationAtom);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesContainerRef = useRef(null);
+  const prevScrollHeightRef = useRef(0);
+
+  const loadMessages = async (pageNum) => {
+    if (isLoading || !hasMore) return;
+    setIsLoading(true);
+    try {
+      if (selectedConversation.mock) return;
+      const res = await fetch(`/api/messages/get/${selectedConversation.userId}?page=${pageNum}`);
+      const data = await res.json();
+      if (data.error) {
+        throw new Error(data.error || 'Something went wrong')
+      }
+      if (pageNum === 1) {
+        setAllMessages(data.messages);
+      } else {
+        setAllMessages(prev => [...data.messages, ...prev]);
+      }
+      setHasMore(data.hasMore);
+      setPage(data.currentPage);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-		const getMessages = async () => {
-			setAllMessages([]);
-			try {
-				if (selectedConversation.mock) return;
-				const res = await fetch(`/api/messages/get/${selectedConversation.userId}`);
-				const data = await res.json();
-				if (data.error) {
-					throw new Error(data.error || 'Something went wrong')
-				}
-				setAllMessages(data);
-			} catch (error) {
-				console.log(error);
-			}
-		};
+    setPage(1);
+    setHasMore(true);
+    loadMessages(1);
+  }, [selectedConversation.userId]);
 
-		getMessages();
-	}, [selectedConversation.userId, selectedConversation.mock]);
+  const handleScroll = (e) => {
+    const { scrollTop } = e.target;
+    if (scrollTop === 0 && hasMore && !isLoading) {
+      prevScrollHeightRef.current = e.target.scrollHeight;
+      loadMessages(page + 1);
+    }
+  };
 
   useEffect(() => {
-        socket.on("newMessage", (message) => {
-            if (selectedConversation._id === message.conversationId) {
-                setAllMessages((prev) => [...prev, message]);
-            }
+    if (messagesContainerRef.current && prevScrollHeightRef.current) {
+      const newScrollHeight = messagesContainerRef.current.scrollHeight;
+      const scrollDiff = newScrollHeight - prevScrollHeightRef.current;
+      messagesContainerRef.current.scrollTop = scrollDiff;
+    }
+  }, [allMessages]);
 
-            setSelectedConversation((prev) => {
-                const updatedConversations = prev.map((conversation) => {
-                    if (conversation._id === message.conversationId) {
-                        return {
-                            ...conversation,
-                            lastMessage: {
-                                text: message.text,
-                                sender: message.sender,
-                            },
-                        };
-                    }
-                    return conversation;
-                });
-                return updatedConversations;
-            });
+  useEffect(() => {
+    socket.on("newMessage", (message) => {
+      if (selectedConversation._id === message.conversationId) {
+        setAllMessages((prev) => [...prev, message]);
+      }
+
+      setSelectedConversation((prev) => {
+        const updatedConversations = prev.map((conversation) => {
+          if (conversation._id === message.conversationId) {
+            return {
+              ...conversation,
+              lastMessage: {
+                text: message.text,
+                sender: message.sender,
+              },
+            };
+          }
+          return conversation;
         });
+        return updatedConversations;
+      });
+    });
 
-        return () => socket.off("newMessage");
-    }, [socket, selectedConversation, setSelectedConversation]);
+    return () => socket.off("newMessage");
+  }, [socket, selectedConversation, setSelectedConversation]);
 
   return (
     <div className="flex-[4_4_0] flex flex-col h-screen overflow-hidden border-r border-l border-gray-700 ">
-      {/* Header */}
-      {
-        selectedConversation._id !== '' && (
-          <button
-            className="absolute left-5 top-5 transform -translate-y-1/2 md:hidden"
-            onClick={() => setSelectedConversation({ mock:false, _id: '', userId: '', username: '', fullname: '', profileImg: '' })}
-          >
-            <IoArrowBack className="text-white text-xl" />
-          </button>
-        )
-      }
+      {selectedConversation._id !== '' && (
+        <button
+          className="absolute left-5 top-5 transform -translate-y-1/2 md:hidden"
+          onClick={() => setSelectedConversation({ mock:false, _id: '', userId: '', username: '', fullname: '', profileImg: '' })}
+        >
+          <IoArrowBack className="text-white text-xl" />
+        </button>
+      )}
       <div className="p-4 font-bold border-b border-gray-600 bg-black flex justify-center items-center h-10 ">Messages</div>
 
       <div className="flex flex-row flex-1 overflow-hidden">
         <Conversation/>
-        <MessageContainer allMessages={allMessages} setAllMessages={setAllMessages}/>
+        <MessageContainer 
+          allMessages={allMessages} 
+          setAllMessages={setAllMessages}
+          messagesContainerRef={messagesContainerRef}
+          handleScroll={handleScroll}
+          isLoading={isLoading}
+        />
       </div>
     </div>
   );
