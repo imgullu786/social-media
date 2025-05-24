@@ -34,7 +34,6 @@ const sendMessage = async (req, res) => {
             img: img || '',
         });
 
-
         await newMessage.save();
         await conversation.updateOne({
             lastMessage: {
@@ -66,8 +65,13 @@ const getMessages = async (req, res) => {
         const conversation = await Conversation.findOne({
             members: { $all: [userId, recipientUserId] },
         });
-        
-        if (!conversation) return res.status(200).json([]);
+
+        if (!conversation) return res.status(200).json({
+            messages: [],
+            hasMore: false,
+            currentPage: 1,
+            totalPages: 0
+        });
 
         const totalMessages = await Message.countDocuments({ conversationId: conversation._id });
         const totalPages = Math.ceil(totalMessages / pageSize);
@@ -76,12 +80,13 @@ const getMessages = async (req, res) => {
             .sort({ createdAt: -1 })
             .skip((page - 1) * pageSize)
             .limit(pageSize)
+            .lean()
             .sort({ createdAt: 1 });
 
         return res.status(200).json({
             messages,
             hasMore: page < totalPages,
-            currentPage: page,
+            currentPage: parseInt(page),
             totalPages
         });
     } catch (error) {

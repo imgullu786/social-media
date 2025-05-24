@@ -18,15 +18,17 @@ const MessagesPage = () => {
   const prevScrollHeightRef = useRef(0);
 
   const loadMessages = async (pageNum) => {
-    if (isLoading || !hasMore) return;
+    if (isLoading || (!hasMore && pageNum !== 1)) return;
     setIsLoading(true);
     try {
-      if (selectedConversation.mock) return;
+      if (selectedConversation.mock) {
+        setAllMessages([]);
+        setHasMore(false);
+        return;
+      }
       const res = await fetch(`/api/messages/get/${selectedConversation.userId}?page=${pageNum}`);
       const data = await res.json();
-      if (data.error) {
-        throw new Error(data.error || 'Something went wrong')
-      }
+      
       if (pageNum === 1) {
         setAllMessages(data.messages);
       } else {
@@ -67,27 +69,14 @@ const MessagesPage = () => {
     socket.on("newMessage", (message) => {
       if (selectedConversation._id === message.conversationId) {
         setAllMessages((prev) => [...prev, message]);
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
       }
-
-      setSelectedConversation((prev) => {
-        const updatedConversations = prev.map((conversation) => {
-          if (conversation._id === message.conversationId) {
-            return {
-              ...conversation,
-              lastMessage: {
-                text: message.text,
-                sender: message.sender,
-              },
-            };
-          }
-          return conversation;
-        });
-        return updatedConversations;
-      });
     });
 
     return () => socket.off("newMessage");
-  }, [socket, selectedConversation, setSelectedConversation]);
+  }, [socket, selectedConversation._id]);
 
   return (
     <div className="flex-[4_4_0] flex flex-col h-screen overflow-hidden border-r border-l border-gray-700 ">
