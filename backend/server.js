@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser';
 import { v2 as cloudinary } from 'cloudinary';
 import path from 'path';
 import {app, server} from './socket/socket.js'
+import job from "./cron/cron.js";
 
 import connectDB from "./db/connectDB.js";
 import authRoutes from "./routes/authRoutes.js";
@@ -13,6 +14,7 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import messageRoutes from './routes/messageRoutes.js';
 
 dotenv.config(path.resolve('../.env'));
+job.start();
 
 cloudinary.config({ 
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
